@@ -17,9 +17,6 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with Zirrux 130.  If not, see <http://www.gnu.org/licenses/>.
 
-(require 'split-sequence)
-
-
 (defmacro with-indentation (indentation &body forms)
   `(let ((*indentation* (+ ,indentation *indentation*)))
      ,@forms))
@@ -43,18 +40,18 @@
       (format nil "((~a >> ~d) & 0xFF)" var (* 8 n))))
 
 (defun tiger-round (outfile a b c x mul sbox-prefix)
-  (format outfile (indent "~a ^= ~a") c x)
-  (format outfile (indent "~a -= ~a1[~a] ^ ~a2[~a] ^ ~a3[~a] ^ ~a4[~a]")
+  (format outfile (indent "~a ^= ~a;") c x)
+  (format outfile (indent "~a -= ~a1[~a] ^ ~a2[~a] ^ ~a3[~a] ^ ~a4[~a];")
 	  a sbox-prefix (nth-byte c 0)
 	  sbox-prefix (nth-byte c 2)
 	  sbox-prefix (nth-byte c 4)
 	  sbox-prefix (nth-byte c 6))
-  (format outfile (indent "~a += ~a1[~a] ^ ~a2[~a] ^ ~a3[~a] ^ ~a4[~a]")
+  (format outfile (indent "~a += ~a1[~a] ^ ~a2[~a] ^ ~a3[~a] ^ ~a4[~a];")
 	  b sbox-prefix (nth-byte c 1)
 	  sbox-prefix (nth-byte c 3)
 	  sbox-prefix (nth-byte c 5)
 	  sbox-prefix (nth-byte c 7))
-  (format outfile (indent "~a *= ~a") b mul))
+  (format outfile (indent "~a *= ~a;") b mul))
 
 (defun tiger-pass (outfile a b c mul keys sbox-prefix)
   (loop for i from 0 to 7
@@ -92,3 +89,9 @@
     (format outfile (indent "registers[1] -= b;"))
     (format outfile (indent "registers[0] += c;")))
   (format outfile (indent "}")))
+
+;; TODO Put the GPL notice in the output file
+
+(format t (indent "#include <stdint.h>"))
+(format t (indent "#include \"tiger.h\""))
+(tiger-compression t "tiger_cmp")
