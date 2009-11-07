@@ -1,0 +1,42 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+6 de Noviembre de 2009. Archivo README de Zirrux 130.
+
+Copyright (C) 2009 Mario Castelán Castro
+
+La copia y distribución textual de este archivo completo está
+permitida mundialmente, sin regalías y en cualquier medio siempre que
+este aviso sea conservado.
+
+Zirrux 130 implementará en forma de libería reusable y un programa
+cliente la función hash criptograficamente segura Tiger
+(http://www.cs.technion.ac.il/~biham/Reports/Tiger/), optimizandola lo
+más posible con énfasis en x86 y x86_64. También se dará soporte
+genérico al resto de plataformas.
+
+Además de ofrecer el Tiger siguendo la construcción de Merkle–Damgård
+también se implementarán árboles de Merkle basados que podrán ser
+calculados concurrentemente para aumentar la flexibilidad y maximizar
+la velocidad en CPU de varios núcleos o varios hílos de ejecución.
+
+Zirrux 130 es software libre: puedes redistribuirlo o modificarlo bajo
+los términos de la GNU General Public Licence publicada por la Free
+Software Foundation, versión 3 o (A tu criterio) cualquier versión
+posterior.
+
+Zirrux 130 es distribuido con el deseo de que sea útil pero SIN
+NINGUNA GARANTÍA EN LO ABSOLUTO, SIN SIQUIERA LA GARANTÍA IMPLÍTICITA
+DE MERCANTILISMO O CUMPLIMIENTO DE UN PROPÓSITO PARTICULAR. Mira la
+GNU General Public Licence para más detalles.
+
+Deberías haber recivido una copia de la GNU General Public Licence
+junto con Zirrux 130 la cuál usualmente en un archivo llamado
+COPYING. Si no es así mira http://www.gnu.org/licences/.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEAREIAAYFAkr0uXsACgkQZ4DA0TLic4jL4wCfVwLuwIDlqwAwkzxIv8QzzTEy
+Y/gAnAuN8ptKUQK+qJRyJ3lvAj41UOzI
+=8DbB
+-----END PGP SIGNATURE-----
