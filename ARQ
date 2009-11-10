@@ -1,0 +1,77 @@
+  ARQ - Descripción del diseño y arquitectura de Zirrux 130
+  Copyright (C) 2009 Mario Castelán Castro
+
+  This file is part of Zirrux 130
+
+  Zirrux 130 is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  Zirrux 130 is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Zirrux 130.  If not, see <http://www.gnu.org/licenses/>.
+
+
+Diseño y arquitectura planeada actualmente para Zirrux 130.
+
+***Función de compresión***
+
+Habrá varias implementaciones de la función de compresión del Tiger,
+inicialmente una en C independiente de plataforma, una en ensamblador
+de x86 y otra en esamblador de AMD64 que permitirán aprovechar todo el
+potencial de éstas plataformas. El diseño puede pero no nesesariametne
+tiene que variar internamente. Todos éstos back ends tendrán una
+interfaz común para facilitar su uso desde el resto del programa.
+
+Ésta interfaz consistirá en 4 funciones accsibles desde el lenguaje C
+por medio de la convención de llamadas cdecl.
+
+Por "destruir" entiendase cambiar de una forma a asumirse inpredecible
+e irreverible. Conservar por el contario refiere a no modificar en lo
+absoluto, lo que permite que el valor en cuestión esté potencialmente
+almacenado en un área de solo lectura. Las funciones serán accesibles
+incluyendo el archivo de cabezara "tiger_compress.h". uint64_t refiere
+a el tipo entero capaz de representar cualquier número desde 0 a
+18446744073709551615 cuya definicón está includa en tiger_compress.h y
+es equivalente y compatible con la cabezera estándard stdint.h. Los
+prototipos de las funciones en cuestion son:
+
+void tiger_compress(uint64_t * registers, uint64_t * keys);
+void ntiger_compress(uint64_t * registers, uint64_t * keys);
+void tiger_compress_blks(uint64_t * registers, void * keys, unsigned
+int len);
+void ntiger_compress_blks(uint64_t * registers, void * keys, unsigned
+int len);
+
+tiger_compress y ntiger_compress aplicarán la función de compresíón a
+un solo bloque de 512 bits. tiger_compress_blks y ntiger_compress_blks
+aplicarán la función de compresión a varios bloques ordenados
+consecutivamente.
+
+register será un apuntador hacia un vector conteniendo los valores
+intermedios de los registros a, b y c del hash Tiger. Será destruido
+por las 4 funciones.
+
+keys será un vector conteniendo el bloque (O los bloques ordenados
+acendentemente en el caso de las funciones sufijadas con _blks)
+descompuesto en palabras de 64 bits tal como se especifica en el papel
+del Tiger. Será destruido por las 2 funciones prefijadas con n y
+conservado por las restantes.
+
+en el caso de tiger_compress_blks y ntiger_compress_blks el último
+argumento (len) especificará la cantidad de bloques a comprimir. Por
+ejemplo si len es 2 se comprimirán 2 bloques correspondientes a 1024
+bits acomodadas en un vector de 16 palabras de 64 bits con el primer
+bloque acomodado en keys[0..7] y el segundo en keys[8..15].
+
+Al nesecitar comprimir varios bloques debería usarse en la medida de
+lo posible las funciones tiger_compress_blks y ntiger_compress_blks en
+lugar de aplicar varias veces tiger_compress o ntiger_compress. La
+idea detraz de esto es usar una convención de llamadas especializada y
+más rápida en lugar de la relativamente lenta aunque de propósito
+general cdecl.
