@@ -73,7 +73,7 @@
   (tiger-key-schendule-round outfile keyvar 6 "((~x4)>>23)")
   (tiger-key-schendule-round outfile keyvar 1 "((~x7)<<19)")
   (tiger-key-schendule-round outfile keyvar 4 "((~x2)>>23)")
-  (format *standard-output* (indent "x[7] -= x[6] ^ 0x0123456789ABCDEF;")))
+  (format outfile (indent "x[7] -= x[6] ^ 0x0123456789ABCDEF;")))
 
 (defun tiger-compression (outfile funname)
   (format outfile (indent "void"))
@@ -97,6 +97,6 @@
   (with-open-file (outfile (elt *posix-argv* 1) :direction :output :if-does-not-exist :create)
     ;; TODO Put the GPL notice in the output file
     (format outfile (indent "#include <stdint.h>"))
-    (format outfile (indent "#include \"tiger-cmp-fun.h\""))
+    (format outfile (indent "#include \"tiger-cmp.h\""))
     (tiger-compression outfile "tiger_cmp"))
   (quit))
