@@ -17,6 +17,7 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with Zirrux 130.  If not, see <http://www.gnu.org/licenses/>.
 
+(defvar *debug* nil)
 (defmacro with-indentation (indentation &body forms)
   `(let ((*indentation* (+ ,indentation *indentation*)))
      ,@forms))
@@ -51,7 +52,8 @@
 	  sbox-prefix (nth-byte c 3)
 	  sbox-prefix (nth-byte c 5)
 	  sbox-prefix (nth-byte c 7))
-  (format outfile (indent "~a *= ~a;") b mul))
+  (format outfile (indent "~a *= ~a;") b mul)
+  (format outfile (indent "printf(\"round %x ~x: %x %x %x\", ~a, ~a, ~a, ~a)") mul x a b c))
 
 (defun tiger-pass (outfile a b c mul keys sbox-prefix)
   (loop for i from 0 to 7
@@ -74,7 +76,8 @@
   (format *standard-output* (indent "x[7] -= x[6] ^ 0x0123456789ABCDEF;")))
 
 (defun tiger-compression (outfile funname)
-  (format outfile (indent "uint64_t~a~a(uint64_t * registers, uint64_t * keys)") #\newline funname)
+  (format outfile (indent "void"))
+  (format outfile (indent "~a(uint64_t * registers, uint64_t * keys)") funname)
   (format outfile (indent "{"))
   (with-indentation 2
     (format outfile (indent "uint64_t a = registers[0];"))
@@ -87,11 +90,13 @@
     (tiger-pass outfile "b" "c" "a" 9 "keys" "t")
     (format outfile (indent "registers[0] ^= a;"))
     (format outfile (indent "registers[1] -= b;"))
-    (format outfile (indent "registers[0] += c;")))
+    (format outfile (indent "registers[2] += c;")))
   (format outfile (indent "}")))
 
-;; TODO Put the GPL notice in the output file
-
-(format t (indent "#include <stdint.h>"))
-(format t (indent "#include \"tiger.h\""))
-(tiger-compression t "tiger_cmp")
+(when (< 1 (length *posix-argv*))
+  (with-open-file (outfile (elt *posix-argv* 1) :direction :output :if-does-not-exist :create)
+    ;; TODO Put the GPL notice in the output file
+    (format outfile (indent "#include <stdint.h>"))
+    (format outfile (indent "#include \"tiger-cmp-fun.h\""))
+    (tiger-compression outfile "tiger_cmp"))
+  (quit))
