@@ -16,7 +16,6 @@
   You should have received a copy of the GNU General Public License
   along with Zirrux 130.  If not, see <http://www.gnu.org/licenses/>.
 
-
 Diseño y arquitectura planeada actualmente para Zirrux 130.
 
 ***Función de compresión***
@@ -35,7 +34,7 @@ Por "destruir" entiendase cambiar de una forma a asumirse inpredecible
 e irreverible. Conservar por el contario refiere a no modificar en lo
 absoluto, lo que permite que el valor en cuestión esté potencialmente
 almacenado en un área de solo lectura. Las funciones serán accesibles
-incluyendo el archivo de cabezara "tiger_compress.h". uint64_t refiere
+incluyendo el archivo de cabezara "tiger_cmp.h". uint64_t refiere
 a el tipo entero capaz de representar cualquier número desde 0 a
 18446744073709551615 cuya definicón está includa en tiger_compress.h y
 es equivalente y compatible con la cabezera estándard stdint.h. Los

@@ -47,14 +47,14 @@
 	  sbox-prefix (nth-byte c 2)
 	  sbox-prefix (nth-byte c 4)
 	  sbox-prefix (nth-byte c 6))
-  (format outfile (indent "~a += ~a1[~a] ^ ~a2[~a] ^ ~a3[~a] ^ ~a4[~a];")
+  (format outfile (indent "~a += ~a4[~a] ^ ~a3[~a] ^ ~a2[~a] ^ ~a1[~a];")
 	  b sbox-prefix (nth-byte c 1)
 	  sbox-prefix (nth-byte c 3)
 	  sbox-prefix (nth-byte c 5)
 	  sbox-prefix (nth-byte c 7))
   (format outfile (indent "~a *= ~a;") b mul)
-;  (when (= *debug* 1)
-;    (format outfile (indent (format nil "printf(\"round ~a %x: %x %x %x\", ~a ~a ~a ~a)" mul x a b c))))
+  (when (= *debug* 1)
+    (format outfile (indent (format nil "printf(\"round %llx ~a: %llx %llx %llx\\n\", ~a, ~a, ~a, ~a);" mul x a b c))))
   )
 
 (defun tiger-pass (outfile a b c mul keys sbox-prefix)
@@ -71,20 +71,39 @@
 
 (defun tiger-key-schendule (outfile keyvar)
   (tiger-key-schendule-round outfile keyvar 0 "0xA5A5A5A5A5A5A5A5")
-  (tiger-key-schendule-round outfile keyvar 3 "((x[1])<<19)")
-  (tiger-key-schendule-round outfile keyvar 6 "((x[4])>>23)")
-  (tiger-key-schendule-round outfile keyvar 1 "((x[7])<<19)")
-  (tiger-key-schendule-round outfile keyvar 4 "((x[2])>>23)")
-  (format outfile (indent "x[7] -= x[6] ^ 0x0123456789ABCDEF;")))
+  (tiger-key-schendule-round outfile keyvar 3 (format nil "((~~~a[1])<<19)" keyvar))
+  (tiger-key-schendule-round outfile keyvar 6 (format nil "((~~~a[4])>>23)" keyvar))
+  (tiger-key-schendule-round outfile keyvar 1 (format nil "((~~~a[7])<<19)" keyvar))
+  (tiger-key-schendule-round outfile keyvar 4 (format nil "((~~~a[2])>>23)" keyvar))
+  (format outfile (indent (format nil "~a[7] -= ~a[6] ^ 0x0123456789ABCDEF;" keyvar keyvar))))
 
 (defun tiger-compression (outfile funname)
-  (format outfile (indent "void"))
-  (format outfile (indent "~a(uint64_t * registers, uint64_t * keys)") funname)
-  (format outfile (indent "{"))
+  (format outfile "/* tiger_cmp_generic.c
+ * Copyright (C) 2009 Mario Castelan Castro
+ *
+ * This file is part of Zirrux 130
+ *
+ * Zirrux 130 is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Zirrux 130 is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Zirrux 130.  If not, see <http://www.gnu.org/licenses/>.
+ */
+")
+  (format outfile "void")
+  (format outfile "~a(uint64_t * registers, uint64_t * keys)" funname)
+  (format outfile "  {")
   (with-indentation 2
     (format outfile (indent "uint64_t a = registers[0];"))
     (format outfile (indent "uint64_t b = registers[1];"))
-    (format outfile (indent "uint64_t b = registers[2];"))
+    (format outfile (indent "uint64_t c = registers[2];"))
     (tiger-pass outfile "a" "b" "c" 5 "keys" "t")
     (tiger-key-schendule outfile "keys")
     (tiger-pass outfile "c" "a" "b" 7 "keys" "t")
@@ -106,7 +125,8 @@
     ;; TODO Put the GPL notice in the output file
     (format outfile (indent "#include <stdint.h>"))
     (format outfile (indent "#include <string.h>"))
-    (format outfile (indent "#include \"tiger-cmp.h\""))
+    (format outfile (indent "#include \"tiger_sbox.h\""))
+    (format outfile (indent "#include \"tiger_cmp.h\""))
     (tiger-compression outfile "ntiger_compress")
     )
   (quit))
