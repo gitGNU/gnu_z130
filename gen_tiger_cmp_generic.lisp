@@ -53,26 +53,28 @@
 	  sbox-prefix (nth-byte c 5)
 	  sbox-prefix (nth-byte c 7))
   (format outfile (indent "~a *= ~a;") b mul)
-  (format outfile (indent "printf(\"round %x ~x: %x %x %x\", ~a, ~a, ~a, ~a)") mul x a b c))
+;  (when (= *debug* 1)
+;    (format outfile (indent (format nil "printf(\"round ~a %x: %x %x %x\", ~a ~a ~a ~a)" mul x a b c))))
+  )
 
 (defun tiger-pass (outfile a b c mul keys sbox-prefix)
   (loop for i from 0 to 7
 	do (progn
-	     (tiger-round outfile a b c (format nil "~a[~d]" keys i) mul sbox-prefix)
+	     (tiger-round outfile a b c (format nil "~a[~a]" keys i) mul sbox-prefix)
 	     (rotatef a b c))))
 
 (defun tiger-key-schendule-round (outfile keyvar off sub-xor-const)
   (flet ((w+ (x y) (mod (+ x y) 8)))
-    (format outfile (indent "~a[~d] -= ~a[~d] ^ ~x;") keyvar off keyvar (w+ off 7) sub-xor-const)
+    (format outfile (indent "~a[~d] -= ~a[~d] ^ ~a;") keyvar off keyvar (w+ off 7) sub-xor-const)
     (format outfile (indent "~a[~d] ^= ~a[~d];") keyvar (w+ off 1) keyvar off)
     (format outfile (indent "~a[~d] += ~a[~d];") keyvar (w+ off 2) keyvar (w+ off 1))))
 
 (defun tiger-key-schendule (outfile keyvar)
   (tiger-key-schendule-round outfile keyvar 0 "0xA5A5A5A5A5A5A5A5")
-  (tiger-key-schendule-round outfile keyvar 3 "((~x1)<<19)")
-  (tiger-key-schendule-round outfile keyvar 6 "((~x4)>>23)")
-  (tiger-key-schendule-round outfile keyvar 1 "((~x7)<<19)")
-  (tiger-key-schendule-round outfile keyvar 4 "((~x2)>>23)")
+  (tiger-key-schendule-round outfile keyvar 3 "((x[1])<<19)")
+  (tiger-key-schendule-round outfile keyvar 6 "((x[4])>>23)")
+  (tiger-key-schendule-round outfile keyvar 1 "((x[7])<<19)")
+  (tiger-key-schendule-round outfile keyvar 4 "((x[2])>>23)")
   (format outfile (indent "x[7] -= x[6] ^ 0x0123456789ABCDEF;")))
 
 (defun tiger-compression (outfile funname)
@@ -93,10 +95,18 @@
     (format outfile (indent "registers[2] += c;")))
   (format outfile (indent "}")))
 
+(defun test ()
+    (format *standard-output* (indent "#include <stdint.h>"))
+    (format *standard-output* (indent "#include <string.h>"))
+    (format *standard-output* (indent "#include \"tiger-cmp.h\""))
+    (tiger-compression *standard-output* "ntiger_compress"))
+
 (when (< 1 (length *posix-argv*))
   (with-open-file (outfile (elt *posix-argv* 1) :direction :output :if-does-not-exist :create)
     ;; TODO Put the GPL notice in the output file
     (format outfile (indent "#include <stdint.h>"))
+    (format outfile (indent "#include <string.h>"))
     (format outfile (indent "#include \"tiger-cmp.h\""))
-    (tiger-compression outfile "tiger_cmp"))
+    (tiger-compression outfile "ntiger_compress")
+    )
   (quit))
