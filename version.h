@@ -17,4 +17,4 @@
  * along with this Zirrux 130.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define Z130_VERSION "1.0"
+#define Z130_VERSION "desarollo"
