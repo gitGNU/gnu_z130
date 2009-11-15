@@ -71,6 +71,6 @@ bloque acomodado en keys[0..7] y el segundo en keys[8..15].
 Al nesecitar comprimir varios bloques debería usarse en la medida de
 lo posible las funciones tiger_compress_blks y ntiger_compress_blks en
 lugar de aplicar varias veces tiger_compress o ntiger_compress. La
-idea detraz de esto es usar una convención de llamadas especializada y
-más rápida en lugar de la relativamente lenta aunque de propósito
-general cdecl.
+idea detraz de esto es usar internamente una convención de llamadas
+especializada y más rápida en lugar de la relativamente lenta aunque
+de propósito general cdecl.
