@@ -20,14 +20,15 @@
 (defvar *debug* nil)
 (defmacro with-indentation (indentation &body forms)
   `(let ((*indentation* (+ ,indentation *indentation*)))
+     (declare (special *indentation*))
      ,@forms))
 
-(defparameter *indentation* 0)
 (defconstant +a-reg-initial-state+ "0x0123456789abcdef")
 (defconstant +b-reg-initial-state+ "0xfedcba9876543210")
 (defconstant +c-reg-initial-state+ "0xf096a5b4c3b2e187")
 
 (defun indent (string)
+  (declare (special *indentation*))
   (concatenate 'string
 	       (make-array *indentation* :initial-element #\space)
 	       string
@@ -94,7 +95,9 @@
 
 (when (< 1 (length *posix-argv*))
   (with-open-file (outfile (elt *posix-argv* 1) :direction :output :if-does-not-exist :create)
-    (format outfile "/* tiger_cmp_generic.c
+
+    (with-indentation 0
+      (format outfile "/* tiger_cmp_generic.c
  * Copyright (C) 2009 Mario Castelan Castro
  *
  * This file is part of Zirrux 130
@@ -114,10 +117,9 @@
  */
 ")
     ;; TODO Put the GPL notice in the output file
-    (format outfile (indent "#include <stdint.h>"))
-    (format outfile (indent "#include <string.h>"))
-    (format outfile (indent "#include \"tiger_sbox.h\""))
-    (format outfile (indent "#include \"tiger_cmp.h\""))
-    (tiger-compression outfile "ntiger_compress")
-    )
-  (quit))
+      (format outfile (indent "#include <stdint.h>"))
+      (format outfile (indent "#include <string.h>"))
+      (format outfile (indent "#include \"tiger_sbox.h\""))
+      (format outfile (indent "#include \"tiger_cmp.h\""))
+      (tiger-compression outfile "ntiger_compress"))
+    (quit)))
