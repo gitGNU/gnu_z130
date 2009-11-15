@@ -52,10 +52,7 @@
 	  sbox-prefix (nth-byte c 3)
 	  sbox-prefix (nth-byte c 5)
 	  sbox-prefix (nth-byte c 7))
-  (format outfile (indent "~a *= ~a;") b mul)
-  (when (= *debug* 1)
-    (format outfile (indent (format nil "printf(\"round %llx ~a: %llx %llx %llx\\n\", ~a, ~a, ~a, ~a);" mul x a b c))))
-  )
+  (format outfile (indent "~a *= ~a;") b mul))
 
 (defun tiger-pass (outfile a b c mul keys sbox-prefix)
   (loop for i from 0 to 7
@@ -78,7 +75,26 @@
   (format outfile (indent (format nil "~a[7] -= ~a[6] ^ 0x0123456789ABCDEF;" keyvar keyvar))))
 
 (defun tiger-compression (outfile funname)
-  (format outfile "/* tiger_cmp_generic.c
+  (format outfile (indent "void"))
+  (format outfile (indent "~a(uint64_t * registers, uint64_t * keys)") funname)
+  (format outfile (indent "  {"))
+  (with-indentation 2
+    (format outfile (indent "uint64_t a = registers[0];"))
+    (format outfile (indent "uint64_t b = registers[1];"))
+    (format outfile (indent "uint64_t c = registers[2];"))
+    (tiger-pass outfile "a" "b" "c" 5 "keys" "t")
+    (tiger-key-schendule outfile "keys")
+    (tiger-pass outfile "c" "a" "b" 7 "keys" "t")
+    (tiger-key-schendule outfile "keys")
+    (tiger-pass outfile "b" "c" "a" 9 "keys" "t")
+    (format outfile (indent "registers[0] ^= a;"))
+    (format outfile (indent "registers[1] -= b;"))
+    (format outfile (indent "registers[2] += c;")))
+  (format outfile (indent "}")))
+
+(when (< 1 (length *posix-argv*))
+  (with-open-file (outfile (elt *posix-argv* 1) :direction :output :if-does-not-exist :create)
+    (format outfile "/* tiger_cmp_generic.c
  * Copyright (C) 2009 Mario Castelan Castro
  *
  * This file is part of Zirrux 130
@@ -97,31 +113,6 @@
  * along with Zirrux 130.  If not, see <http://www.gnu.org/licenses/>.
  */
 ")
-  (format outfile "void")
-  (format outfile "~a(uint64_t * registers, uint64_t * keys)" funname)
-  (format outfile "  {")
-  (with-indentation 2
-    (format outfile (indent "uint64_t a = registers[0];"))
-    (format outfile (indent "uint64_t b = registers[1];"))
-    (format outfile (indent "uint64_t c = registers[2];"))
-    (tiger-pass outfile "a" "b" "c" 5 "keys" "t")
-    (tiger-key-schendule outfile "keys")
-    (tiger-pass outfile "c" "a" "b" 7 "keys" "t")
-    (tiger-key-schendule outfile "keys")
-    (tiger-pass outfile "b" "c" "a" 9 "keys" "t")
-    (format outfile (indent "registers[0] ^= a;"))
-    (format outfile (indent "registers[1] -= b;"))
-    (format outfile (indent "registers[2] += c;")))
-  (format outfile (indent "}")))
-
-(defun test ()
-    (format *standard-output* (indent "#include <stdint.h>"))
-    (format *standard-output* (indent "#include <string.h>"))
-    (format *standard-output* (indent "#include \"tiger-cmp.h\""))
-    (tiger-compression *standard-output* "ntiger_compress"))
-
-(when (< 1 (length *posix-argv*))
-  (with-open-file (outfile (elt *posix-argv* 1) :direction :output :if-does-not-exist :create)
     ;; TODO Put the GPL notice in the output file
     (format outfile (indent "#include <stdint.h>"))
     (format outfile (indent "#include <string.h>"))
