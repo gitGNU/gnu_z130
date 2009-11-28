@@ -18,6 +18,7 @@
 ;; along with Zirrux 130.  If not, see <http://www.gnu.org/licenses/>.
 
 (defvar *debug* nil)
+(defvar *indentation* 0)
 (defmacro with-indentation (indentation &body forms)
   `(let ((*indentation* (+ ,indentation *indentation*)))
      (declare (special *indentation*))
@@ -28,7 +29,6 @@
 (defconstant +c-reg-initial-state+ "0xf096a5b4c3b2e187")
 
 (defun indent (string)
-  (declare (special *indentation*))
   (concatenate 'string
 	       (make-array *indentation* :initial-element #\space)
 	       string
@@ -53,7 +53,9 @@
 	  sbox-prefix (nth-byte c 3)
 	  sbox-prefix (nth-byte c 5)
 	  sbox-prefix (nth-byte c 7))
-  (format outfile (indent "~a *= ~a;") b mul))
+  (format outfile (indent "~a *= ~a;") b mul)
+  (when nil
+    (format outfile (indent (format nil "printf(\"%llx ~a: %llx %llx %llx\\n\", ~a, ~a, ~a, ~a);" mul x a b c)))))
 
 (defun tiger-pass (outfile a b c mul keys sbox-prefix)
   (loop for i from 0 to 7
@@ -78,7 +80,7 @@
 (defun tiger-compression (outfile funname)
   (format outfile (indent "void"))
   (format outfile (indent "~a(uint64_t * registers, uint64_t * keys)") funname)
-  (format outfile (indent "  {"))
+  (format outfile (indent "{"))
   (with-indentation 2
     (format outfile (indent "uint64_t a = registers[0];"))
     (format outfile (indent "uint64_t b = registers[1];"))
@@ -88,12 +90,14 @@
     (tiger-pass outfile "c" "a" "b" 7 "keys" "t")
     (tiger-key-schendule outfile "keys")
     (tiger-pass outfile "b" "c" "a" 9 "keys" "t")
-    (format outfile (indent "registers[0] ^= a;"))
-    (format outfile (indent "registers[1] -= b;"))
-    (format outfile (indent "registers[2] += c;")))
+    (format outfile (indent "registers[0] = a ^ registers[0];"))
+    (format outfile (indent "registers[1] = b - registers[1];"))
+    (format outfile (indent "registers[2] = c + registers[2];")))
   (format outfile (indent "}")))
 
-(when (< 1 (length *posix-argv*))
+(print *posix-argv*)
+
+(when t
   (with-open-file (outfile (elt *posix-argv* 1) :direction :output :if-does-not-exist :create)
 
     (with-indentation 0
@@ -121,5 +125,6 @@
       (format outfile (indent "#include <string.h>"))
       (format outfile (indent "#include \"tiger_sbox.h\""))
       (format outfile (indent "#include \"tiger_cmp.h\""))
-      (tiger-compression outfile "ntiger_compress"))
-    (quit)))
+      (tiger-compression outfile "ntiger_compress"))))
+
+(quit)
