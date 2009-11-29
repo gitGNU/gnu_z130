@@ -154,7 +154,7 @@ main(int argc, char ** argv)
 	{
 	case 0:
 	  print_tiger(stdout, hash);
-	  printf("  %s", argv[optind]);//printf("%llx %llx %llx  %s\n", hash[0], hash[1], hash[2], argv[optind]);
+	  printf("  %s\n", argv[optind]);
 	  break;
 	case 1:
 	  fprintf(stderr, "%s: %s\n", argv[0], strerror(errno));
