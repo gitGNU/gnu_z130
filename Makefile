@@ -18,18 +18,28 @@
 ##
 
 CC=gcc
+CFLAGS=-ggdb
 
-all: test_generic
+all: tigersum
+
+clean:
+	rm -r *.o tigersum
 
 tiger_cmp_generic.o: tiger_cmp_generic.c tiger_cmp.h
 	$(CC) $(CFLAGS) -c tiger_cmp_generic.c
 
 tiger_cmp_generic_core.c: gen_tiger_cmp_generic.lisp tiger_cmp.h
 	rm -f tiger_cmp_generic_core.c
-	sbcl --eval "(defvar *debug* 1)" --load gen_tiger_cmp_generic.lisp tiger_cmp_generic_core.c
+	sbcl --load gen_tiger_cmp_generic.lisp tiger_cmp_generic_core.c
 
 tiger_cmp_generic_core.o: tiger_cmp_generic_core.c tiger_cmp.h
 	$(CC) $(CFLAGS) -c tiger_cmp_generic_core.c
 
-test_generic: test_generic.c tiger_cmp.h tiger_cmp_generic.o tiger_cmp_generic_core.o
-	$(CC) $(CFLAGS) -o test_generic test_generic.c tiger_cmp_generic.o tiger_cmp_generic_core.o
+tiger_padding.o: tiger_padding.c tiger_padding.h
+	$(CC) $(CFLAGS) -c tiger_padding.c
+
+tigersum.o: tigersum.c tiger_cmp.h tiger_padding.h
+	$(CC) $(CFLAGS) -c tigersum.c
+
+tigersum: tigersum.o tiger_cmp_generic.o tiger_cmp_generic_core.o tiger_padding.o
+	$(CC) $(CFLAGS) -o tigersum tigersum.o tiger_cmp_generic.o tiger_padding.o tiger_cmp_generic_core.o
